@@ -97,6 +97,7 @@ lst = np.zeros(31)
 for i in range(31):
     lst[i] = i
 
+# Initialize Diagram 1
 fig0 = go.Figure()
 fig0.update_layout(
     xaxis_title = "Time",
@@ -104,15 +105,16 @@ fig0.update_layout(
 )
 fig0 = fig0.update_layout(height=200)
 fig0.update_layout(legend=dict(
-    yanchor="top",  # y轴顶部
+    yanchor="top",
     y=0.99,
-    xanchor="right",  # x轴靠右
+    xanchor="right",
     x=0.99
 ))
 fig0 = fig0.update_layout(height=230)
 fig0 = fig0.update_layout(margin_l = 0, margin_r = 0, margin_t = 0, margin_b = 0)
 fig0 = fig0.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
 
+# Initialize Diagram 2
 fig1 = go.Figure()
 fig1.update_layout(
     xaxis_title = "The number of people in a grid in a month",
@@ -120,9 +122,9 @@ fig1.update_layout(
 )
 fig1 = fig1.update_layout(height=300)
 fig1.update_layout(legend=dict(
-    yanchor="top",  # y轴顶部
+    yanchor="top",
     y=0.99,
-    xanchor="right",  # x轴靠右
+    xanchor="right",
     x=0.99
 ))
 fig1 = fig1.update_layout(margin_l = 0, margin_r = 0, margin_t = 0, margin_b = 0)
@@ -134,6 +136,7 @@ app.layout = html.Div(
             [
                 html.Div(
                     [
+                        # the logo image
                         html.Img(
                             src=app.get_asset_url("LOGO.png"),
                             id="plotly-image",
@@ -151,6 +154,7 @@ app.layout = html.Div(
                     [
                         html.Div(
                             [
+                                # the title
                                 html.H4(
                                     "Multi-Data Taxi Visualization System",
                                     style={"font-weight": "bold"},
@@ -171,6 +175,7 @@ app.layout = html.Div(
         ),
         html.Div(
             [
+                # the map
                 html.Div(
                     mapCom,
                     id='mapContainer'
@@ -182,29 +187,35 @@ app.layout = html.Div(
 
         html.Div(
             [
+                # Point Data To Point Data
                 html.Div(
                     [
+                        # the first method
                         html.H6("Point Data To Point Data",
                                 style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
-
                         html.Div(
                             [
+                                # CSV File Uploader
                                 html.B(' CSV File Uploader'),
                                 du.Upload(id='csv_uploader',
                                           default_style={'height': '25px'},
                                           text='Click or drag file in to the square to upload a CSV file.',
                                           max_file_size=4096, filetypes=['csv'],
                                           cancel_button=True, pause_button=True, upload_id='csv'),
+                                # GeoJSON File Uploader
                                 html.B(' GeoJSON File Uploader'),
                                 du.Upload(id='json_uploader',
                                           default_style={'height': '25px'},
                                           text='Click or drag file in to the square to upload a GeoJSON/JSON file.',
                                           max_file_size=2048, filetypes=['geojson'],
                                           cancel_button=False, pause_button=False, upload_id='geojson'),
+                                # dropdown to choose geojson file
                                 dcc.Dropdown(id="geoJsonFile",
                                              options=[]),
+                                # the button to update all dropdowns
                                 html.Button(id='update-dropdown', children='update dropdown',
                                             style={'height': '30px', 'line-height': '30px', "margin-right": "12px"}),
+                                # the button to show the chosen dropdown
                                 html.Button(id='showGeoJson', children='show chosen GeoJson',
                                             style={'height': '30px', 'line-height': '30px', "margin-right": "12px"}),
                                 html.Br()
@@ -213,6 +224,7 @@ app.layout = html.Div(
                         ),
 
                         html.Div([
+                                # Initial the longitude and the latitude of three point
                                 html.I(' Origin point:'),
                                 html.Br(),
                                 dcc.Input(id='originLat', value=40.7062855, type='number',
@@ -240,6 +252,7 @@ app.layout = html.Div(
                                           style={'height': '30px', 'width': '120px'}),
                                 html.I('Longitude'),
                                 html.Br(),
+                                # set the number of grids
                                 dcc.Input(id='xBlockNum', value=8, type='number',
                                           style={'height': '30px', 'width': '60px'}),
                                 html.I('Block number along X-axis',
@@ -248,17 +261,22 @@ app.layout = html.Div(
                                           style={'height': '30px', 'width': '60px'}),
                                 html.I('Block number along Y-axis'),
                                 html.Br(),
+                                # the button to show the grids
                                 html.Button(id='submit-button', type='submit', children='Submit',
                                             style={'height': '30px', 'line-height': '30px', "margin-right": "12px"}),
+                                # the button to show bar in the map
                                 html.Button(id='display-bar-button', children='show bar',
                                             style={'height': '30px', 'line-height': '30px', "margin-right": "12px"}),
+                                # the button to reset all files and actions
                                 html.Button(id='reset-button', children='Reset',
                                             style={'height': '30px', 'line-height': '30px', "margin-right": "12px"}),
+                                # the button to show the chosen bar in the map
                                 html.Button(id='hide-data-button', children='show chosen bar',
                                         style={'height': '30px', 'line-height': '30px', "margin-right": "12px"}),
                             ],
                             style={'display': 'inline'}
                         ),
+                        # the dropdown to choose data for showing the bar
                         html.Div(
                             id='third',
                             children=[
@@ -274,7 +292,7 @@ app.layout = html.Div(
                             children='',
                             style={'display': 'none'}
                         ),
-
+                        # the second method
                         html.Div(
                             id='planB',
                             children=[
@@ -287,7 +305,6 @@ app.layout = html.Div(
                                 dcc.Input(id='minSamples', value=3, type='number'),
                                 html.Br(),
                                 html.B('Choose Base Data:  '),
-                                # dcc.Input(id='minSamples', value=1, type='number'),
                                 dcc.Dropdown(id="baseDataC",
                                              options=[{'label': x, 'value': x} for x in csvFileUp]),
                                 html.B('Choose Input Data:  '),
@@ -298,8 +315,7 @@ app.layout = html.Div(
                             ],
                             style={'display': 'inline'}
                         ),
-                        # html.H6("Point Data and Surface Data",
-                        #         style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
+                        # the third method
                         html.Div(
                             id='planC',
                             children=[
@@ -327,6 +343,7 @@ app.layout = html.Div(
 
                 html.Div(
                     [
+                        # Point Data To Polygon
                         html.H6("Point Data To Polygon",
                                 style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
                         html.Div(
@@ -349,6 +366,7 @@ app.layout = html.Div(
                             style={'display': 'inline'}
                         ),
 
+                        # Point Data to Line Data
                         html.H6("Point Data to Line Data",
                                 style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
                         html.Div(
@@ -387,6 +405,7 @@ app.layout = html.Div(
                             ],
                             style={'display': 'inline'}
                         ),
+                # Line Data To Polygon
                 html.H6("Line Data To Polygon",
                         style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
                 html.Div(
@@ -421,7 +440,7 @@ app.layout = html.Div(
             className="row flex-display",
         ),
 
-
+        # show the first diagram
         html.Div(
             [
                 html.Div(
@@ -438,7 +457,7 @@ app.layout = html.Div(
                     className="pretty_container four columns",
 
                 ),
-
+                # show the second diagram
                 html.Div(
                     [html.H6("Taxi Data Histogram",
                              style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
@@ -454,7 +473,7 @@ app.layout = html.Div(
             className="row flex-display",
         ),
 
-
+        # the authors
         html.Div(
             [
                 html.H6("Authors", style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
@@ -466,6 +485,7 @@ app.layout = html.Div(
             ],
             className="row pretty_container",
         ),
+        # the references
         html.Div(
             [
                 html.H6("Sources", style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
@@ -489,6 +509,8 @@ app.layout = html.Div(
     style={"display": "flex", "flex-direction": "column"},
 )
 
+
+# reset all actions and files
 @app.callback(
     Output('mapContainer', 'children'),
     Output('originLat', 'value'),
@@ -542,12 +564,12 @@ def make_new_CSV_layer(filename: str):
     print(p)
     try:
         data = pd.read_csv(p, parse_dates=['time'])
-        # df = pd.DataFrame(data)
         csvData.append(data[['time', 'longitude', 'latitude']].copy())
     except ValueError:
         data = pd.read_csv(p, encoding='gbk')
         otherData.append(data.copy())
     print(0)
+
 
 @app.callback(
     Output('mapContainer', 'children'),
@@ -581,14 +603,13 @@ def update_Map(click, file):
             t = None
         except IndexError:
             t = None
-
         tCom = dd.DeckGL(t.to_json(), id='deck_gl',
                          style={'position': 'relative', 'height': '70vh', 'width': '88vw'},
                          mapboxKey=mapbox_api_token, tooltip=True)
         print('finish making new map')
         return tCom
 
-
+# upload the geojson file
 @du.callback(
     Output('nouse', 'children'),
     id='json_uploader',
@@ -599,7 +620,7 @@ def uploadedJsonFile(filenames):
         fileUp.append(filenames[0])
     return 0
 
-
+# upload the csv file
 @du.callback(
     Output('nouse', 'children'),
     id='csv_uploader',
@@ -615,6 +636,7 @@ def uploadedCSVFile(filenames):
     print(len(csvFileUp))
     return 0
 
+# update all dropdown
 @app.callback(
     Output(component_id='baseDataC', component_property='options'),
     Output(component_id='inDataC', component_property='options'),
@@ -652,7 +674,7 @@ def update_dropdown2(clicks):
                [{'label': x, 'value': x} for x in csvFileUp], \
                [{'label': x, 'value': x} for x in csvFileUp]
 
-
+# update the grids
 @app.callback(Output('mapContainer', 'children'),
               Input('submit-button', 'n_clicks'),
               State('originLat', 'value'),
@@ -720,7 +742,7 @@ def update_Grid(clicks, input1, input2, input3, input4, input5, input6, input7, 
             print('finish making new map')
             return tCom
 
-
+# display the bar
 @app.callback(
     Output(component_id='mapContainer', component_property='children'),
     Output(component_id='histogram', component_property='figure'),
@@ -845,6 +867,7 @@ def display_bar(clicks):
                 has_changed = False
                 return barMap[0], fig_new1, [{'label': x, 'value': x} for x in options_new], fig0
 
+# select grid and show the data in the second diagram
 @app.callback(
     Output(component_id='line_chart', component_property='figure'),
     Input(component_id='grid_option', component_property='value')
