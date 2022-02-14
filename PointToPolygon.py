@@ -5,7 +5,7 @@ import pydeck as pdk
 import time
 import geopandas as gp
 
-
+#处理点面融合数据
 def color_scale(val, maxVal, color_idx):
     per = 1.0 * val / maxVal
     if color_idx % 2 == 0:
@@ -37,27 +37,28 @@ def Point2Polygon(file, pointFile):
     latitude = 'latitude'
     longitude = 'longitude'
     stack = []
-    regionShape = gp.read_file(file).reset_index(inplace=False)  # .to_crs('EPSG:4326')
-    # for each in regionShape['geometry']:
-    #     print(each.is_valid)
+    regionShape = gp.read_file(file).reset_index(inplace=False)  # .to_crs('EPSG:4326')#读取基数据（Polygon面数据），生成geodataframe
+
     idx = 0
     d = json.load(open(file))
-    region = pd.DataFrame(d["features"]).reset_index(inplace=False)
+    region = pd.DataFrame(d["features"]).reset_index(inplace=False)#处理DataFrame的序号
     for i in range(region.shape[0]):
         stack.append(0)
-    length = regionShape.shape[0]
+    length = regionShape.shape[0]#获取数字总量
     result = []
     # data = pd.read_csv('DATA/yellow_tripdata_2014-01.csv',low_memory=False,nrows=1000)
 
-    data = pd.read_csv(pointFile, encoding='utf-8', parse_dates=['time'])
+    data = pd.read_csv(pointFile, encoding='utf-8', parse_dates=['time'])#读取点数据，生成geodataframe
     data[[longitude, latitude]] = data[[longitude, latitude]].apply(
         pd.to_numeric)
     data = data[['time', longitude, latitude]].copy()
+    
+    #计算gdata中的坐标点数据属于哪一个Polygon区域
     gdata = gp.GeoDataFrame(data, geometry=gp.points_from_xy(data[longitude], data[latitude]),
                             crs='EPSG:4326')
-        # print(regionShape.head())
-        # print('\n\n\n\n\n')
     tmp = gp.sjoin(gdata, regionShape, how='right').reset_index(inplace=False)
+    
+    
     tmp1 = pd.DataFrame(tmp).groupby(['index'], as_index=False).count()[['index', 'time']]
     maxVal = tmp1['time'].max()
     tmp1['color'] = tmp1.apply((lambda row: color_scale(int(row['time']), maxVal, idx)), axis=1)
