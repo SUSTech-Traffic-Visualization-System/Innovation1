@@ -53,6 +53,7 @@ def plotFeature(data, labels_):
         subCluster = data[np.where(labels_ == i)]
         ax.scatter(subCluster[:, 0], subCluster[:, 1], c=colorSytle, s=12)
 
+        #凸包函数计算聚类完成的点集的边界，并将直线画出
         if i != -1 and len(subCluster) >= 3:
             point = np.array(subCluster)
             hull = ConvexHull(point)
@@ -140,6 +141,8 @@ def Cluster(radius, min_samples, baseDataSamp, baseData, inData):
     epsilon = radius / kms_per_radian
 
     start_time = time.time()
+    
+    #通过DBSCAN算法对基数据进行聚类，生成对应点集
     db = DBSCAN(eps=epsilon, min_samples=min_samples, algorithm='ball_tree', metric='haversine').fit(np.radians(coords))
     cluster_labels = db.labels_
 
@@ -216,16 +219,17 @@ def Cluster(radius, min_samples, baseDataSamp, baseData, inData):
     # data = pd.read_csv('DATA/yellow_tripdata_2014-01.csv',low_memory=False,nrows=1000)
     # data = pd.read_csv('./DATA./yellow_tripdata_2014-01.csv', nrows=1000, encoding='utf-8')
     data = inData
-
+    
+    # 将聚类完成的结果数据转换为GeoDataFrame形式
     data[[longitude, latitude]] = data[[longitude, latitude]].apply(
         pd.to_numeric)
     gdata = gp.GeoDataFrame(data, geometry=gp.points_from_xy(data[longitude], data[latitude]),
                             crs='EPSG:4326')
-    # print(regionShape.head())
-    # print('\n\n\n\n\n')
+    
+    # 利用sjoin方法统计gdata中各个点分别属于哪个聚类当中，并将结果储存在Result中
     Result = gp.sjoin(gdata, regionShape, how='left')
 
-    Result = Result.dropna()
+    Result = Result.dropna()#将不属于聚类的点去除
     raw_count = Result['index_right']
     count = []
     for j in range(length):
