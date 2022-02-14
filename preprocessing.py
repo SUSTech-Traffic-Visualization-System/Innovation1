@@ -9,6 +9,10 @@ import pandas as pd
 import numpy as np
 import scipy.sparse as ss
 
+#包含点点数据融合的处理方式。
+#点点数据，会先通过输入的三个基础坐标点（第一组点数据）和分割大小生成指定大小、范围、个数的多个小平行四边形区域，再通过统计第二组
+#点数据里的各个坐标点属于哪个平行四边形区域来实现点面数据融合，进而实现点点数据融合
+
 #指定三个点，确定坐标系
 origin_longitude = -73.9985950
 origin_latitude = 40.7738362
