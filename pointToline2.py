@@ -10,6 +10,9 @@ import time
 import geopandas as gp
 import random
 
+#点数据和线数据的融合，首先使用点数据，通过DBSCAN聚类算法生成多个点集，再利用凸包函数将点集转换为面数据
+#得到新的面数据后，将线分为两个点，进而将线数据转换为点数据，最后统计各个新的点数据里的各个点分别属于面
+#数据里的哪一个面。通过双数操作，我们可以得知线数据连接哪两个面，实现线面数据的融合，进而实现电线数据融合
 
 def get_centermost_point(cluster):
     centroid = (MultiPoint(cluster).centroid.x, MultiPoint(cluster).centroid.y)
@@ -30,6 +33,7 @@ def plotFeature(data, labels_):
         subCluster = data[np.where(labels_ == i)]
         ax.scatter(subCluster[:, 0], subCluster[:, 1], c=colorSytle, s=12)
 
+        #利用凸包函数，为各个聚类完成后生成的点集生成边界，进而将点数据转换为面数据
         if i != -1 and len(subCluster) >= 3:
             point = np.array(subCluster)
             hull = ConvexHull(point)
@@ -96,7 +100,7 @@ def creat_Shp(filename, radius, min_samples):
     epsilon = radius / kms_per_radian
 
     start_time = time.time()
-    db = DBSCAN(eps=epsilon, min_samples=min_samples, algorithm='ball_tree', metric='haversine').fit(np.radians(coords))
+    db = DBSCAN(eps=epsilon, min_samples=min_samples, algorithm='ball_tree', metric='haversine').fit(np.radians(coords))#通过DBSCAN聚类算法生成多个点集
     cluster_labels = db.labels_
 
     # get the number of clusters
@@ -129,6 +133,8 @@ def processing(pointfilename, datafilename):
     data = pd.read_csv(datafilename, encoding='utf-8')
 
     data[['longitude', 'latitude']] = data[['longitude', 'latitude']].apply(pd.to_numeric)
+    
+    #通过geodataframe里的sjoin方法计算上车或者下车坐标点数据属于regionShape面数据里的哪一个面，实现点面数据的融合
     gdata = gp.GeoDataFrame(data, geometry=gp.points_from_xy(data['longitude'], data['latitude']), crs='EPSG:4326')
     Result = gp.sjoin(gdata, regionShape, how='left')
     return Result, regionShape
@@ -146,7 +152,7 @@ def pTOl2(clusterFileName, PICKdatafilename, DROPdatafilename, radius, min_sampl
     tmp = pd.DataFrame(result)
     tmp2 = tmp.groupby(['index_right_x', 'index_right_y'], as_index=False).count()[
         ['index_right_x', 'index_right_y', 'time_x']]
-    region = region['center']
+    region = region['center']#用面的中心坐标点数据来代表面数据
     return region, tmp2
 
 
