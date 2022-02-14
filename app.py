@@ -20,13 +20,11 @@ import PointToPolygon as p2p
 import LineToPolygon as l2p
 from preprocessing import gps2grid
 
-class layerObj:
-    def __init__(self, name, layer: pydeck.Layer):
-        self.name = name
-        self.content = layer
-
 pd.set_option('display.max_columns', None)
+
+# need an mapbox access token to successfully run the program
 mapbox_api_token = os.getenv("MAPBOX_ACCESS_TOKEN")
+
 lat = []
 lon = []
 xBNum = 0
@@ -57,6 +55,10 @@ show_chos = False
 app = DashProxy(prevent_initial_callbacks=True, transforms=[MultiplexerTransform()])
 du.configure_upload(app, './DataUploadStorage/', use_upload_id=True)
 
+# function: to create the effect of color variation in a single layer
+# input: val: the value to get color
+#        maxVal: the max value from the value group. Needed for calculate the color
+# output: a list [R, G, B] containing 3 number for color
 def color_scale(val, maxVal):
     global color_idx
     per = 1.0 * val / maxVal
@@ -74,6 +76,9 @@ def color_scale(val, maxVal):
         B = 125
     return [R, G, B]
 
+# paragraph
+# start
+# function: to initiate the neccessary components for the webpage
 INITIAL_VIEW_STATE = pydeck.ViewState(
     latitude=40.8,
     longitude=-74.00,
@@ -91,7 +96,8 @@ r = pydeck.Deck(
 mapCom = dd.DeckGL(r.to_json(), id='deck_gl',
                    style={'position': 'relative', 'height': '70vh', 'width': '88vw'},
                    mapboxKey=mapbox_api_token, tooltip=True)
-
+# Paragraph
+# end
 
 lst = np.zeros(31)
 for i in range(31):
@@ -185,12 +191,19 @@ app.layout = html.Div(
             className="row flex-display",
         ),
 
+        
+        # Paragraph
+        # start 
+        # Description: the Div for the operating area. Containing all operation method for the map view
         html.Div(
             [
                 # Point Data To Point Data
                 html.Div(
                     [
                         # the first method
+                        # drawing grid map according to user's input &
+                        # basic function of showing uploaded file.
+                        
                         html.H6("Point Data To Point Data",
                                 style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
                         html.Div(
@@ -202,6 +215,7 @@ app.layout = html.Div(
                                           text='Click or drag file in to the square to upload a CSV file.',
                                           max_file_size=4096, filetypes=['csv'],
                                           cancel_button=True, pause_button=True, upload_id='csv'),
+                                
                                 # GeoJSON File Uploader
                                 html.B(' GeoJSON File Uploader'),
                                 du.Upload(id='json_uploader',
@@ -209,6 +223,7 @@ app.layout = html.Div(
                                           text='Click or drag file in to the square to upload a GeoJSON/JSON file.',
                                           max_file_size=2048, filetypes=['geojson'],
                                           cancel_button=False, pause_button=False, upload_id='geojson'),
+                                
                                 # dropdown to choose geojson file
                                 dcc.Dropdown(id="geoJsonFile",
                                              options=[]),
@@ -224,6 +239,7 @@ app.layout = html.Div(
                         ),
 
                         html.Div([
+                            
                                 # Initial the longitude and the latitude of three point
                                 html.I(' Origin point:'),
                                 html.Br(),
@@ -252,6 +268,7 @@ app.layout = html.Div(
                                           style={'height': '30px', 'width': '120px'}),
                                 html.I('Longitude'),
                                 html.Br(),
+                            
                                 # set the number of grids
                                 dcc.Input(id='xBlockNum', value=8, type='number',
                                           style={'height': '30px', 'width': '60px'}),
@@ -261,21 +278,26 @@ app.layout = html.Div(
                                           style={'height': '30px', 'width': '60px'}),
                                 html.I('Block number along Y-axis'),
                                 html.Br(),
+                            
                                 # the button to show the grids
                                 html.Button(id='submit-button', type='submit', children='Submit',
                                             style={'height': '30px', 'line-height': '30px', "margin-right": "12px"}),
+                            
                                 # the button to show bar in the map
                                 html.Button(id='display-bar-button', children='show bar',
                                             style={'height': '30px', 'line-height': '30px', "margin-right": "12px"}),
+                            
                                 # the button to reset all files and actions
                                 html.Button(id='reset-button', children='Reset',
                                             style={'height': '30px', 'line-height': '30px', "margin-right": "12px"}),
+                            
                                 # the button to show the chosen bar in the map
                                 html.Button(id='hide-data-button', children='show chosen bar',
                                         style={'height': '30px', 'line-height': '30px', "margin-right": "12px"}),
                             ],
                             style={'display': 'inline'}
                         ),
+                        
                         # the dropdown to choose data for showing the bar
                         html.Div(
                             id='third',
@@ -292,7 +314,10 @@ app.layout = html.Div(
                             children='',
                             style={'display': 'none'}
                         ),
-                        # the second method
+                        
+                        # The second method for point-point.
+                        # Using clustering method to give a visualization of two point sets.
+                        
                         html.Div(
                             id='planB',
                             children=[
@@ -315,7 +340,10 @@ app.layout = html.Div(
                             ],
                             style={'display': 'inline'}
                         ),
+                        
                         # the third method
+                        # using buffer-area and point set to do visualization.
+                    
                         html.Div(
                             id='planC',
                             children=[
@@ -344,6 +372,8 @@ app.layout = html.Div(
                 html.Div(
                     [
                         # Point Data To Polygon
+                        # by clustering and generate corresponding area shape
+                        # user could change parameters.(e.g. radius, minimum sample number.)
                         html.H6("Point Data To Polygon",
                                 style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
                         html.Div(
@@ -367,6 +397,8 @@ app.layout = html.Div(
                         ),
 
                         # Point Data to Line Data
+                        # Using point data to generate polygon
+                        # Then check line data with the polygon generated by the point set
                         html.H6("Point Data to Line Data",
                                 style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
                         html.Div(
@@ -405,7 +437,10 @@ app.layout = html.Div(
                             ],
                             style={'display': 'inline'}
                         ),
+                        
                 # Line Data To Polygon
+                # Separate line data into two point data set
+                # need grid map or given geojson file
                 html.H6("Line Data To Polygon",
                         style={"margin-top": "0", "font-weight": "bold", "text-align": "center"}),
                 html.Div(
@@ -439,7 +474,10 @@ app.layout = html.Div(
             ],
             className="row flex-display",
         ),
-
+        # Paragraph
+        # end
+        
+        
         # show the first diagram
         html.Div(
             [
@@ -511,6 +549,8 @@ app.layout = html.Div(
 
 
 # reset all actions and files
+# Input: click number(triggered every time when clicking the button)
+# Output: default view of all components 
 @app.callback(
     Output('mapContainer', 'children'),
     Output('originLat', 'value'),
@@ -557,7 +597,9 @@ def reset(clicks):
         otherData.clear()
     return mapCom, 40.7062855, -74.0315102, 40.6937655, -73.9871323, 40.7738362, -73.9985950, 8, 16, 1.5, 1, None, None, None, fig0, fig1, []
 
-
+# add csv data to storage for later use
+# Input: the name of the given csv file
+# Output: void
 def make_new_CSV_layer(filename: str):
     print('make csv layer')
     p = './{}'.format(filename.replace('\\', '/'))
@@ -570,7 +612,10 @@ def make_new_CSV_layer(filename: str):
         otherData.append(data.copy())
     print(0)
 
-
+# update the mapview
+# Input: click: number of clicks.(triggered every time when clicking the button)
+#        file: the chosen uploaded geojson file to show
+# Output: void
 @app.callback(
     Output('mapContainer', 'children'),
     Input(component_id='showGeoJson', component_property='n_clicks'),
@@ -610,6 +655,8 @@ def update_Map(click, file):
         return tCom
 
 # upload the geojson file
+# Input: filenames: name of the geojson file that has just been uploaded
+# Output: void
 @du.callback(
     Output('nouse', 'children'),
     id='json_uploader',
@@ -621,6 +668,8 @@ def uploadedJsonFile(filenames):
     return 0
 
 # upload the csv file
+# Input: filenames: name of the csv file that has just been uploaded
+# Output: void
 @du.callback(
     Output('nouse', 'children'),
     id='csv_uploader',
@@ -637,6 +686,8 @@ def uploadedCSVFile(filenames):
     return 0
 
 # update all dropdown
+# Input: click: number of clicks.(triggered every time when clicking the button)
+# Output: void
 @app.callback(
     Output(component_id='baseDataC', component_property='options'),
     Output(component_id='inDataC', component_property='options'),
@@ -675,6 +726,16 @@ def update_dropdown2(clicks):
                [{'label': x, 'value': x} for x in csvFileUp]
 
 # update the grids
+# Input: click: number of clicks.(triggered every time when clicking the button)
+#        input1: Latitude of orgin
+#        input2: Longitude of orgin
+#        input3: Latitude of right-bottom point
+#        input4: Longitude of right-bottom point
+#        input5: Latitude of left-upper point
+#        input6: Longitude of left-upper point
+#        input7: number of blocks along x-axis(origin-rightbottom)
+#        input8: numberof blocks along y-axis(origin-leftupper)
+# Output: void
 @app.callback(Output('mapContainer', 'children'),
               Input('submit-button', 'n_clicks'),
               State('originLat', 'value'),
@@ -743,6 +804,8 @@ def update_Grid(clicks, input1, input2, input3, input4, input5, input6, input7, 
             return tCom
 
 # display the bar
+# Input: click: number of clicks.(triggered every time when clicking the button)
+# Output: void
 @app.callback(
     Output(component_id='mapContainer', component_property='children'),
     Output(component_id='histogram', component_property='figure'),
@@ -952,7 +1015,9 @@ def select_grid(options):
     fig_new2 = fig_new2.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     return fig_new2
 
-
+# Generate stacked-3D bar layer
+# Input: data: a csv data to make bar layer
+# Output: void
 def makeStackBarLayer(data):
     Flow = gps2grid(data, lon[0], lat[0], lon[1], lat[1], lon[2], lat[2], xBNum, yBNum)
     global color_idx
@@ -1006,6 +1071,10 @@ def makeStackBarLayer(data):
     stackBarLayer.append(bL)
     return Flow
 
+
+# Generate stacked-3D bar layer with only chosen data
+# Input: data: a csv data to make bar layer
+# Output: void
 def makeChosenBarLayer(data):
     Flow = gps2grid(data, lon[0], lat[0], lon[1], lat[1], lon[2], lat[2], xBNum, yBNum)
     global color_idx
@@ -1127,7 +1196,13 @@ def show_chosen(n_clicks, val):
 
         return chosenBarMap, fig_new1, [{'label': x, 'value': x} for x in options_new], fig0
 
-
+# show clustering result
+# Input: clicks: number of clicks.(triggered every time when clicking the button)
+#        bData: base data for clustering
+#        iData: input data for checking
+#        minSamples: minimum sample number in clustering process
+#        radius: radius in clustering process
+# Output: void
 @app.callback(
     Output(component_id='mapContainer', component_property='children'),
     Input(component_id='showClusterButton', component_property='n_clicks'),
@@ -1188,7 +1263,12 @@ def showClusters(clicks, bData, iData, minSamples, radius):
         )
         return dMap
 
-
+# Show buffer area visualization
+# Input: n_clicks: number of clicks.(triggered every time when clicking the button)
+#        bData: base data for clustering
+#        iData: input data for checking
+#        radius: radius of buffer areas
+# Output: void
 @app.callback(
     Output(component_id='mapContainer', component_property='children'),
     Input(component_id='showBufferButton', component_property='n_clicks'),
@@ -1234,7 +1314,11 @@ def showBuffers(clicks, bData, iData, radius):
         )
         return dMap
 
-
+# Show Point-Polygon visualization with chosen files
+# Input: click: number of clicks.(triggered every time when clicking the button)
+#        val: chosen csv file
+#        file: chosen file
+# Output: void
 @app.callback(
     Output(component_id='mapContainer', component_property='children'),
     Input(component_id='showChosenP2PButton', component_property='n_clicks'),
@@ -1271,7 +1355,14 @@ def showChosenP2P(click, val, file):
         )
         return dMap
 
-
+# Show Point-line visualization with chosen files(clustering one)
+# Input: click: number of clicks.(triggered every time when clicking the button)
+#        pointData: chosen csv file
+#        fromData: origin point set from line data file
+#        toData: destination point set from line data file
+#        m: minimum sample number
+#        minL: minimum line count between two area
+# Output: void
 @app.callback(
     Output('mapContainer', 'children'),
     Input('showP2LCButton', 'n_clicks'),
@@ -1334,7 +1425,21 @@ def showP2LC(click, pointData, fromData, toData, rad, m, minL):
         )
         return lMap
 
-
+# Show Point-line visualization with chosen files(Grid map one)
+# Input: click: number of clicks.(triggered every time when clicking the button)
+#        input1: Latitude of origin
+#        input2: Longitude of origin
+#        input3: Latitude of right-bottom
+#        input4: Longitude of right-bottom
+#        input5: Latitude of left-upper
+#        input6: Longitude of left-upper
+#        input7: number of blocks along x-axis(origin->right-bottom)
+#        input8: number of blocks along y-axis(origin->left-upper)
+#        dF: origin point set from line data file
+#        dT: destination point set from line data file
+#        m: minimum sample number
+#        minL: minimum line count between two area
+# Output: void
 @app.callback(
     Output('mapContainer', 'children'),
     Input('showP2LGButton', 'n_clicks'),
@@ -1411,7 +1516,14 @@ def showP2LG(click, input1, input2, input3, input4, input5, input6, input7, inpu
         )
         return lMap
 
-
+    
+# Show Line-Polygon visualization with chosen files
+# Input: click: number of clicks.(triggered every time when clicking the button)
+#        fromData: origin point set from line data file
+#        toData: destination point set from line data file
+#        geoJson: chosen geojson file
+#        minl: minimum line count between two area
+# Output: void
 @app.callback(
     Output(component_id='mapContainer', component_property='children'),
     Input(component_id='showChosenL2PButton', component_property='n_clicks'),
