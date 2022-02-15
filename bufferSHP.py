@@ -43,32 +43,27 @@ def bufferSHP(r, baseData, inData):
 
     gdf['centroid'] = gdf.centroid
     gdf = gdf.drop(['geometry'], axis=1)
-    gdf['geometry'] = gdf['centroid'].buffer(distance=radius)
+    gdf['geometry'] = gdf['centroid'].buffer(distance=radius)#利用缓冲区算法，将基数据的点转换为指定半径的polygon
     gdf = gdf.drop(['centroid'], axis=1)
 
+    #生成缓冲区的shp和geojson格式的文件
     gdf.to_file(r'./shp/Polygon/buffer.shp', driver='ESRI Shapefile', encoding='utf-8', crs='EPSG:4326')
     gdf.to_file(r'./shp/Geojson/buffer.geojson', driver='GeoJSON', encoding='utf-8', crs='EPSG:4326')
 
     start = time.perf_counter()
     pd.set_option('display.max_columns', None)
-    regionShape = gp.read_file(r'./shp/Polygon/buffer.shp')  # .to_crs('EPSG:4326')
-    # stj.trans('./shp/Polygon/buffer.shp', 'buffer')  # .to_crs('EPSG:4326')
-    # print(regionShape.head)
-    # regionShape.to_file('./region2.geojson', driver='GeoJSON')
-    # print(regionShape)
-
-    # data = pd.read_csv('DATA/yellow_tripdata_2014-01.csv',low_memory=False,nrows=1000)
-    # data = pd.read_csv('./DATA./yellow_tripdata_2014-01.csv', nrows=100, encoding='utf-8')
+    regionShape = gp.read_file(r'./shp/Polygon/buffer.shp')  # .to_crs('EPSG:4326')#读取buffer.shp，将里面的区域储存为regionShape
     data = inData
 
     data[[longitude, latitude]] = data[[longitude, latitude]].apply(
         pd.to_numeric)
     gdata = gp.GeoDataFrame(data, geometry=gp.points_from_xy(data[longitude], data[latitude]),
                             crs='EPSG:4326')
-    # print(regionShape.head())
-    # print('\n\n\n\n\n')
+    
+    #利用sjoin计算gdata中的坐标点属于哪一个缓冲区polygon
     Result = gp.sjoin(gdata, regionShape, how='left')
     d = json.load(open('./shp/Geojson/buffer.geojson', encoding='utf-8'))
+    
     bufferPolygon = pd.DataFrame(d["features"])
     length = regionShape.shape[0]
     Result = Result.dropna()

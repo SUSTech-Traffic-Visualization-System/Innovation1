@@ -18,6 +18,9 @@ bottom_left_latitude = 40.7062855
 dlat = 1 / 8
 dlon = 1 / 16
 
+#包含点线数据融合的处理方法。
+#点线数据，会先通过输入的三个基础坐标点和分割大小生成指定大小、范围、个数的多个小平行四边形区域，再通过统计线数据里的各条线的起始坐
+#标点和终止坐标点属于哪个平行四边形区域来实现点面数据融合，进而实现点线数据融合
 
 def coordinate_conversion(coor,
                           orlon=origin_longitude,
@@ -25,7 +28,7 @@ def coordinate_conversion(coor,
                           xlon=top_right_longitude,
                           xlat=top_right_latitude,
                           ylon=bottom_left_longitude,
-                          ylat=bottom_left_latitude):
+                          ylat=bottom_left_latitude):#三个坐标点和分割个数
     origin = np.array((orlat, orlon))
     b1 = np.array([xlat, xlon]) - origin
     b2 = np.array([ylat, ylon]) - origin
@@ -37,9 +40,11 @@ def coordinate_conversion(coor,
 
 
 def gps2grid(d: pd.DataFrame, orlon, orlat, rblon, rblat, lulon, lulat, dx, dy):
+  #处理点数据并计算其属于哪个小平行四边形
     data = d.copy()
     data.columns = ['time', 'longitude', 'latitude']
     print(dx, dy)
+    #统计属于一月的数据
     data = data[(data['time'] >= '2014-01-01 00:00:00') & (data['time'] < '2014-02-01 00:00:00')]
 
     data['date'] = data['time'].dt.day - 1
@@ -62,6 +67,7 @@ def gps2grid(d: pd.DataFrame, orlon, orlat, rblon, rblat, lulon, lulat, dx, dy):
     data['grid'] = data['lat_tr'] + data['lon_tr'] * dx
 
     # Flow = data.groupby(['time', 'grid']).size().reset_index(name='Flow')
+    #返回指定格式的数据
     return data
     # print('Flow:  ', Flow)
     #
@@ -95,10 +101,10 @@ def preprocessingB(origin,up,down,dx,dy,file1, file2):
     # up = (0, 4)
     # down = (8, 0)
 
-    data = pd.read_csv(file1, encoding='utf-8', parse_dates=['time'])
+    data = pd.read_csv(file1, encoding='utf-8', parse_dates=['time'])#读取线数据的起始点
     df = data[['time', 'longitude', 'latitude']].copy()
     pFlow = gps2grid(df, -74.0315102, 40.7062855, -73.9871323, 40.6937655, -73.9985950, 40.7738362, 8, 16)
-    data = pd.read_csv(file2, encoding='utf-8', parse_dates=['time'])
+    data = pd.read_csv(file2, encoding='utf-8', parse_dates=['time'])#读取线数据的终止点
     df = data[['time', 'longitude', 'latitude']].copy()
     dFlow = gps2grid(df, -74.0315102, 40.7062855, -73.9871323, 40.6937655, -73.9985950, 40.7738362, 8, 16)
 
@@ -107,6 +113,7 @@ def preprocessingB(origin,up,down,dx,dy,file1, file2):
     result = result.reset_index(drop=True)
 
     ans = []
+    #计算分割出的小平行四边形的中心坐标
     for i in range(dy):
         for j in range(dx):
 

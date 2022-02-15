@@ -142,7 +142,7 @@ def threePoint(point3, point1, point2, d_x, d_y):
             w.poly(parts)
             w.record(id)
             ans.append(vertices)
-    #生成geojson文件
+    #生成geojson文件        
     geo(ans)
 
 
