@@ -350,7 +350,7 @@ app.layout = html.Div(
                                 html.Br(),
                                 html.B("----------------------------------------------------------------------------------------------------------------------------------------------------------------------"),
                                 html.Br(),
-                                html.B('Radius:(Miles)  '),
+                                html.B('Radius:(Metres)  '),
                                 dcc.Input(id='bufferRadius', value=50, type='number'),
                                 html.Br(),
                                 html.B('Choose Base Data:  '),
